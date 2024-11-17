@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            padding: 20px;
+            margin-top: 50px;
+            text-align: center;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            color: #3a3a3a;
+        }
+        .input-group {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+        }
+        button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #5a67d8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4c51bf;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .output div {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dammie Optimus Change Calculator</h1>
+    <div class="input-group">
+        <input type="text" id="amountInput" placeholder="Enter amount paid | amount spent">
+        <button onclick="calculateChange()">Show Change</button>
+    </div>
+    <div class="output" id="outputContainer"></div>
+</div>
+
+<script>
+    // Define Naira denominations
+    const denominations = [1000, 500, 200, 100, 50];
+
+    function calculateChange() {
+        const input = document.getElementById("amountInput").value;
+        const [paid, cost] = input.split('|').map(Number);
+        
+        if (isNaN(paid) || isNaN(cost) || paid < cost) {
+            alert("Please enter valid amounts (e.g., 1000|300) where paid amount is greater than amount spent.");
+            return;
+        }
+
+        const change = paid - cost;
+        const outputContainer = document.getElementById("outputContainer");
+        outputContainer.innerHTML = ""; // Clear previous output
+
+        if (change <= 0) {
+            outputContainer.innerHTML = "<p>No change required.</p>";
+            return;
+        }
+
+        const possibleOptions = getChangeCombinations(change);
+
+        // Display first 20 options
+        possibleOptions.slice(0, 20).forEach((option, index) => {
+            const optionDiv = document.createElement("div");
+            optionDiv.innerHTML = `<strong>Option ${index + 1}:</strong><br>` +
+                option.map(([denom, count]) => `₦${denom} × ${count}`).join("<br>");
+            outputContainer.appendChild(optionDiv);
+        });
+    }
+
+    function getChangeCombinations(change) {
+        const results = [];
+
+        // Recursive function to find all possible combinations
+        function findCombinations(currentCombo, startIndex, remainingChange) {
+            if (remainingChange === 0) {
+                const countedCombo = currentCombo.reduce((acc, denom) => {
+                    acc[denom] = (acc[denom] || 0) + 1;
+                    return acc;
+                }, {});
+                const sortedCombo = Object.entries(countedCombo).sort((a, b) => b[0] - a[0]);
+                results.push(sortedCombo);
+                return;
+            }
+
+            for (let i = startIndex; i < denominations.length; i++) {
+                const denom = denominations[i];
+                if (denom <= remainingChange) {
+                    findCombinations([...currentCombo, denom], i, remainingChange - denom);
+                }
+            }
+        }
+
+        findCombinations([], 0, change);
+        return results;
+    }
+</script>
+
+</body>
+</html>
